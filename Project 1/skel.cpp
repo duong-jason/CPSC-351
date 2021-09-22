@@ -8,112 +8,95 @@
 
 using namespace std;
 
+#define READ_END 0 /* The read end of the pipe */
+#define WRITE_END 1 /* The write end of the pipe */
+#define HSA_ARRAY_SIZE 6 /* The maximum size of the array of hash programs */
+#define HASH_VALUE_LENGTH 1000 /* The maximum length of the hash value */
+#define MAX_FILE_NAME_LENGTH 1000 /* The maximum length of the file name */
+
 int parentToChildPipe[2]; /* The pipe for parent-to-child communications */
 int childToParentPipe[2]; /* The pipe for the child-to-parent communication */
 
-#define READ_END 0 /* The read end of the pipe */
-#define WRITE_END 1 /* The write end of the pipe */
-#define HASH_PROG_ARRAY_SIZE 6 /* The maximum size of the array of hash programs */
-#define HASH_VALUE_LENGTH 1000 /* The maximum length of the hash value */
-#define MAX_FILE_NAME_LENGTH 1000 /* The maximum length of the file name */
+void error(const char* code) {
+	perror(code);
+	exit(-1);
+}
 
 /* The array of hash algorithm names */
 const string HSA[] = { "md5sum", "sha1sum", "sha224sum", "sha256sum", "sha384sum", "sha512sum" };
 
-/**
- * The function called by a child
- * @param HSA - the name of the hash program
- */
 void computeHash(const string& HSA) {
 	char hashValue[HASH_VALUE_LENGTH]; /* The hash value buffer */
 	char fileNameRecv[MAX_FILE_NAME_LENGTH]; /* The received file name string */
 
-	memset(fileNameRecv, (char)NULL, MAX_FILE_NAME_LENGTH);	 /* Fill the buffer with 0's */
+	memset(fileNameRecv, (char) NULL, MAX_FILE_NAME_LENGTH); /* Fill the buffer with 0's */
+	memset(hashValue, (char) NULL, HASH_VALUE_LENGTH); 		 /* Reset the value buffer */
 	
-	/** TODO: Now, lets read a message from the parent **/
-	
-	/* Glue together a command line <PROGRAM NAME>.
- 	 * For example, sha512sum fileName.
- 	 */
-	string cmdLine(HSA);
-	cmdLine += " ";
-	cmdLine += fileNameRecv;
-	
-    /* TODO: Open the pipe to the program (specified in cmdLine)
-	* using popen() and save the ouput into hashValue. See popen.cpp
-    * for examples using popen.
-	.
-	.
-	.
-	*/
-		
-	memset(hashValue, (char)NULL, HASH_VALUE_LENGTH); /* Reset the value buffer */
-		
-	/* TODO: Send a string to the parent
- 	 .
-	 .
-	 .
-	*/
+	/* reading message from parent & then closes */
+	if (read(parentToChildPipe[READ_END], fileNameRecv, MAX_FILE_NAME_LENGTH)) { error("read"); }
+	if (close(parentToChildPipe[READ_END]) < 0) { error("close"); }
 
-	/* The child terminates */
+	string cmdLine = HSA + " " + fileNameRecv; /* ~ md5sum pipe.cpp ~ */
+
+	FILE* f_ptr = popen(cmdLine.c_str(), "r"); /* issues secure hash algorithm */
+	if (!f_ptr) { error("popen"); }
+
+	/* read the program output into hashValue */
+	if (fread(hashValue, sizeof(char), sizeof(char)*HASH_VALUE_LENGTH, f_ptr) < 0) { error("fread"); }
+	/* close the file pointer representing the program output */
+	if (pclose(f_ptr) < 0) { error("perror"); }
+
+	/* child writes to parent & then closes */
+	if (write(childToParentPipe[WRITE_END], hashValue, HASH_VALUE_LENGTH) < 0) { error("write"); }
+	if (close(childToParentPipe[WRITE_END]) < 0) { error("close"); }
+
 	exit(0);
 }
 
 int main(int argc, char** argv) {
-	if (argc < 2) { /* Check for errors */
+	if (argc < 2) { /* error checking */
 		fprintf(stderr, "USAGE: %s <FILE-NAME>\n", argv[0]);
 		exit(-1);
 	}
 	
-	string fileName(argv[1]); /* Save the name of the file */
-	pid_t pid; /* The process id */
+	const string fileName(argv[1]); /* Save the name of the file */
 	
-	/* Run a program for each type of hashing algorithm hash algorithm */
-	for (int idx = 0; idx < HASH_PROG_ARRAY_SIZE; ++idx) {
+	/* Run a program for each type of hash algorithm */
+	for (int idx = 0; idx < HSA_ARRAY_SIZE; ++idx) {
+		/* Create a parent-to-child and child-to-parent pipes */
+		if (pipe(parentToChildPipe) < 0) {  error("pipe"); }
+		if (pipe(childToParentPipe) < 0) {  error("pipe"); }
 
-		/** TODO: create two pipes **/
-		
-		/* Fork a child process and save the id */
-		if ((pid = fork()) < 0) {
-			perror("fork");
-			exit(-1);
-		} else if (pid == 0) { /* I am a child */
-			/** TODO: close the unused ends of two pipes **/
+		pid_t pid; /* The process id */
 
+		/* fork a child process and save the id */
+		if ((pid = fork()) < 0) { error("fork"); }
+		/* I am a child */
+		else if (pid == 0) {
+			if (close(parentToChildPipe[WRITE_END]) || close(childToParentPipe[READ_END]) < 0) { error("close"); }
 			computeHash(HSA[idx]); /* Compute the hash */
 		}
 		
-		/* I am the parent */
+		/* Close the parent read & write ends of the PC & CP pipes */
+		if (close(parentToChildPipe[READ_END]) || close(childToParentPipe[WRITE_END]) < 0) { error("close"); }
 
-		/** TODO: close the unused ends of two pipes. **/
-
-		/* The buffer to hold the string received from the child */	
 		char hashValue[HASH_VALUE_LENGTH];
-		
-		/* Reset the hash buffer */
-		memset(hashValue, (char)NULL, HASH_VALUE_LENGTH);
-		
-			
-		/* TODO: Send the string to the child 
-		 .
-		 .
-		 .
-		 */
-		
-		/* TODO: Read the string sent by the child 
-		 .
-		 .	
-		 .
-		 */
-		
+		memset(hashValue, (char) NULL, HASH_VALUE_LENGTH);
+
+		/* parent writes to child & then closes */
+		if (write(parentToChildPipe[WRITE_END], argv[1], sizeof(argv[1])) < 0) { error("parent write"); }
+		if (close(parentToChildPipe[WRITE_END]) < 0) { error("close"); }
+
+		/* parent reads from child & then closes */
+		if (read(childToParentPipe[READ_END], hashValue, sizeof(hashValue)) < 0) { error("parent read"); }
+		if (close(childToParentPipe[READ_END]) < 0) { error("close"); }
+
 		/* Print the hash value */
 		fprintf(stdout, "%s HASH VALUE: %s\n", HSA[idx].c_str(), hashValue);
 		fflush(stdout);
 	
-		if (wait(NULL) < 0) { /* Wait for the program to terminate */	
-			perror("wait");
-			exit(-1);
-		}
+		/* Wait for the program to terminate */	
+		if (wait(NULL) < 0) { error("wait"); }
 	}
 	
 	return 0;
