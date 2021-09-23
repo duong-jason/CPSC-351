@@ -31,22 +31,25 @@ void computeHash(const string& HSA) {
 
 	memset(fileNameRecv, (char) NULL, MAX_FILE_NAME_LENGTH); /* Fill the buffer with 0's */
 	memset(hashValue, (char) NULL, HASH_VALUE_LENGTH); 		 /* Reset the value buffer */
-	
-	/* reading message from parent & then closes */
+
+	// reading message from parent & then closes
 	if (read(parentToChildPipe[READ_END], fileNameRecv, MAX_FILE_NAME_LENGTH)) { error("read"); }
+	// reading message from parent & then closes
 	if (close(parentToChildPipe[READ_END]) < 0) { error("close"); }
 
-	string cmdLine = HSA + " " + fileNameRecv; /* ~ md5sum pipe.cpp ~ */
+	// ~ md5sum pipe.cpp ~
+	string cmdLine = HSA + " " + fileNameRecv;
 
-	FILE* f_ptr = popen(cmdLine.c_str(), "r"); /* issues secure hash algorithm */
+	// issues secure hash algorithm
+	FILE* f_ptr = popen(cmdLine.c_str(), "r");
 	if (!f_ptr) { error("popen"); }
 
-	/* read the program output into hashValue */
-	if (fread(hashValue, sizeof(char), sizeof(char)*HASH_VALUE_LENGTH, f_ptr) < 0) { error("fread"); }
-	/* close the file pointer representing the program output */
+	// read the program output into hashValue
+	if (fread(hashValue, sizeof(char), sizeof(char) * HASH_VALUE_LENGTH, f_ptr) < 0) { error("fread"); }
+	// close the file pointer representing the program output
 	if (pclose(f_ptr) < 0) { error("perror"); }
 
-	/* child writes to parent & then closes */
+	// child writes to parent & then closes
 	if (write(childToParentPipe[WRITE_END], hashValue, HASH_VALUE_LENGTH) < 0) { error("write"); }
 	if (close(childToParentPipe[WRITE_END]) < 0) { error("close"); }
 
@@ -58,16 +61,15 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "USAGE: %s <FILE-NAME>\n", argv[0]);
 		exit(-1);
 	}
-	
+
 	const string fileName(argv[1]); /* Save the name of the file */
 	
 	/* Run a program for each type of hash algorithm */
 	for (int idx = 0; idx < HSA_ARRAY_SIZE; ++idx) {
 		/* Create a parent-to-child and child-to-parent pipes */
-		if (pipe(parentToChildPipe) < 0) {  error("pipe"); }
-		if (pipe(childToParentPipe) < 0) {  error("pipe"); }
-
-		pid_t pid; /* The process id */
+		if (pipe(parentToChildPipe) < 0 || pipe(childToParentPipe) < 0) {  error("pipe"); }
+		/* The process id */
+		pid_t pid;
 
 		/* fork a child process and save the id */
 		if ((pid = fork()) < 0) { error("fork"); }
@@ -88,7 +90,7 @@ int main(int argc, char** argv) {
 		if (close(parentToChildPipe[WRITE_END]) < 0) { error("close"); }
 
 		/* parent reads from child & then closes */
-		if (read(childToParentPipe[READ_END], hashValue, sizeof(hashValue)) < 0) { error("parent read"); }
+		if (read(childToParentPipe[READ_END], hashValue, HASH_VALUE_LENGTH) < 0) { error("parent read"); }
 		if (close(childToParentPipe[READ_END]) < 0) { error("close"); }
 
 		/* Print the hash value */
