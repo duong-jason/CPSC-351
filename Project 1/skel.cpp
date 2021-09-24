@@ -1,3 +1,8 @@
+/*
+ * Project 1: skel.cpp
+ * Authors: Jason Duong (reddkingdom@csu.fullerton.edu)
+ */
+
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
