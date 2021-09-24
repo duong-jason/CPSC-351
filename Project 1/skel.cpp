@@ -33,12 +33,9 @@ void computeHash(const string& HSA) {
 	memset(fileNameRecv, (char) NULL, MAX_FILE_NAME_LENGTH); // Fill the buffer with 0's
 	memset(hashValue, (char) NULL, HASH_VALUE_LENGTH); 		 // Reset the value buffer
 
-<<<<<<< HEAD
 	// close unused ends
 	if (close(parentToChildPipe[WRITE_END]) || close(childToParentPipe[READ_END]) < 0) { error("close"); }
 
-=======
->>>>>>> 505d25460430645568fb906f30c033eeff44462c
 	// reading message from parent & then closes
 	if (read(parentToChildPipe[READ_END], fileNameRecv, MAX_FILE_NAME_LENGTH)) { error("read"); }
 	// reading message from parent & then closes
@@ -79,13 +76,9 @@ int main(int argc, char** argv) {
 		pid_t pid;
 
 		// fork a child process and save the id
-<<<<<<< HEAD
 		if ((pid = fork()) < 0) {
 			error("fork");
 		}
-=======
-		if ((pid = fork()) < 0) { error("fork"); }
->>>>>>> 505d25460430645568fb906f30c033eeff44462c
 		// I am a child
 		else if (pid == 0) {
 			computeHash(HSA[idx]); /* Compute the hash */
@@ -98,11 +91,7 @@ int main(int argc, char** argv) {
 		memset(hashValue, (char) NULL, HASH_VALUE_LENGTH);
 
 		// parent writes to child & then closes
-<<<<<<< HEAD
 		if (write(parentToChildPipe[WRITE_END], argv[1], strlen(argv[1])+1) < 0) { error("parent write"); }
-=======
-		if (write(parentToChildPipe[WRITE_END], argv[1], strlen(argv[1])) < 0) { error("parent write"); }
->>>>>>> 505d25460430645568fb906f30c033eeff44462c
 		if (close(parentToChildPipe[WRITE_END]) < 0) { error("close"); }
 
 		// parent reads from child & then closes
