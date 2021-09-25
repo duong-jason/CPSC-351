@@ -23,8 +23,8 @@ int parentToChildPipe[2]; // The pipe for parent-to-child communications
 int childToParentPipe[2]; // The pipe for the child-to-parent communication
 
 /* error function */
-void error(const char* code) {
-	perror(code);
+void error(const char* status) {
+	perror(status);
 	exit(-1);
 }
 
