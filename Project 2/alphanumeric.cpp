@@ -9,15 +9,25 @@
 #include <unistd.h>
 #include <cctype>
 #include <string>
+#include <vector>
 
 using namespace std;
 
-// global variables
+/*
+ * @phrase  [ contains the command line input shared by both threads ]
+ * @state   [ the rows of the adj_mat ]
+ * @edge    [ the columns of the adj_mat ]
+ * @adj_mat [ a graph whose rules are based on a fsm (finite state machine) ] 
+ */
 string phrase;
 size_t state, edge;
 size_t adj_mat[3][3] = {{0, 2, 1}, {0, 1, 1}, {0, 2, 2}};
 
-// function to be runned by each thread
+/*
+ * @fsm [ finite state machine ] 
+ *     @instance [ null ]
+ *	   @output   [ a list of strings that are identified either alpha or numeric ] 
+ */
 void* fsm(void*);
 
 int main(int argc, char* argv[]) {
@@ -32,8 +42,7 @@ int main(int argc, char* argv[]) {
 	phrase += " ";
 
 	pthread_t alpha, numeric;
-	// creating two threads (total 3 including parent thread)
-    pthread_create(&alpha, NULL, fsm, NULL);
+    pthread_create(&alpha, NULL, fsm, NULL); // creating two threads (total 3 including parent thread)
 //    pthread_create(&numeric, NULL, fsm, NULL);
 
 	pthread_join(alpha, NULL);
@@ -42,25 +51,32 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
+/*
+ * @fsm [ finite state machine ] 
+ *     @instance [ null ]
+ */
 void* fsm(void* arg) {
 	state = 0;
-	string buffer;
+	string token;
+	bool type;
 
-	for (char token : phrase) {
-		if (isspace(token) && edge != 0) { // reset if space and prev was not space
+	for (char word : phrase) {
+		if (isspace(word) && edge != 0) { // reset if space and prev was not space
+			cout << (type == 0 ? "numeric: " + token : "alpha: " + token) << endl;
 			edge = 0;
-			cout << buffer << endl;
-			buffer = "";
+			token = "";
 		}
 		else {
-			if (isdigit(token)) { // numeric
+			if (isdigit(word)) { // numeric
 				edge = 1;
+				if (token.length() < 1) { type = 0; }
 			}
-			else if (isalpha(token) || ispunct(token)) { // alphabets | symbols | punctuations
+			else if (isalpha(word) || ispunct(word)) { // alphabets | symbols | punctuations
 				edge = 2;
+				if (token.length() < 1) { type = 1; }
 			}
 
-			buffer += token;
+			token += word;
 		}
 
 		state = adj_mat[state][edge];
