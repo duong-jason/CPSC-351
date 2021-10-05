@@ -10,6 +10,7 @@
 #include <cctype>
 #include <string>
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -29,6 +30,7 @@ size_t adj_mat[3][3] = {{0, 2, 1}, {0, 1, 1}, {0, 2, 2}};
  *	   @output   [ a list of strings that are identified either alpha or numeric ] 
  */
 void* fsm(void*);
+void printtoken(const string&, const bool&);
 
 int main(int argc, char* argv[]) {
 	if (argc < 2) { // error checking for number of arguments
@@ -37,9 +39,7 @@ int main(int argc, char* argv[]) {
 	}
 
  	// reading the phrase from terminal and storing in a global variable
-	// and augment the string to print the last word
 	phrase = argv[1];
-	phrase += " ";
 
 	pthread_t alpha, numeric;
     pthread_create(&alpha, NULL, fsm, NULL); // creating two threads (total 3 including parent thread)
@@ -55,14 +55,15 @@ int main(int argc, char* argv[]) {
  * @fsm [ finite state machine ] 
  *     @instance [ null ]
  */
+
 void* fsm(void* arg) {
-	state = 0;
 	string token;
 	bool type;
+	state = 0;
 
 	for (char word : phrase) {
 		if (isspace(word) && edge != 0) { // reset if space and prev was not space
-			cout << (type == 0 ? "numeric: " + token : "alpha: " + token) << endl;
+			printtoken(token, type);
 			edge = 0;
 			token = "";
 		}
@@ -81,6 +82,9 @@ void* fsm(void* arg) {
 
 		state = adj_mat[state][edge];
 	}
-
 	pthread_exit(0);
+}
+
+void printtoken(const string& token, const bool& type) {
+	cout << (type == 0 ? "numeric: " + token : "alpha: " + token) << endl;
 }
