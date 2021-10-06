@@ -14,7 +14,7 @@ using namespace std;
 /*
  * @phrase  [ contains the command line input shared by both threads ]
  * @bool    [ halts numeric thread if start is an alphabet or alphabet thread if start is a numeric ]
- * @i       [ number of words iterated ]
+ * @i       [ number of words iterated in total by both threads ]
  * @alpha   [ parses out words that start with an alphabet ]
  * @numeric [ parses out numeric words that start with a numeric ]
  */
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
 void* alpha(void* arg) {
 	string word;
 	stringstream read(phrase);
-	int n = 0;
+	int n = 0; // number of words read by only thread t1
 
 	while (read >> word) {
 		if (isalpha(word[0]) || ispunct(word[0])) { // alphabets | symbols | punctuations 
@@ -57,11 +57,11 @@ void* alpha(void* arg) {
 			n++;
 			i++;
 		}
-		else if (n < i && !flag) {
+		else if (n < i && !flag) { // skip words already read by t2 thread
 			n++;
 		}
 		else {
-			flag = true;
+			flag = true; // block t1 thread until t2 thread encounters an word starting with an alphabet
 			while (flag) continue; // if digit, then wait
 			n++;
 		}
@@ -74,19 +74,19 @@ void* alpha(void* arg) {
 void* numeric(void* arg) {
 	string word;
 	stringstream read(phrase);
-	int n = 0;
+	int n = 0; // number of words read by only thread t2
 
-	while (read >> word) {
+	while (read >> word) { // parses out words from string, no need for tokenizer
 		if (isdigit(word[0])) {
 			cout << "numeric: " << word << endl;
 			n++;
 			i++;
 		}
-		else if (n < i && flag) {
+		else if (n < i && flag) { // skip word already read by t1 thread
 			n++;
 		}
 		else {
-			flag = false;
+			flag = false; // block t2 thread until t1 thread encounters an word starting with a digit/numeric 
 			while (!flag) continue; // if alphabet, then wait
 			n++;
 		}

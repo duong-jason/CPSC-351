@@ -30,6 +30,7 @@ int main(int argc, char* argv[]) {
 	pthread_create(&tid, NULL, fibonacci, argv[1]); // creates child thread;
 	pthread_join(tid, NULL); // parent thread waits for child thread to terminate
 
+	// parent thread outputs the sequence stored in the vector
 	for (size_t elt : f) { cout << elt << " "; }
 	cout << endl;
 
