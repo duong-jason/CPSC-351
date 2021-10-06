@@ -5,86 +5,93 @@
 
 #include <pthread.h>
 #include <iostream>
-#include <stdio.h>
-#include <unistd.h>
-#include <cctype>
 #include <string>
-#include <vector>
-#include <string>
+#include <bits/stdc++.h> // stringstream
+#include <cctype> // isalpha | ispunct | isdigit
 
 using namespace std;
 
 /*
  * @phrase  [ contains the command line input shared by both threads ]
- * @state   [ the rows of the adj_mat ]
- * @edge    [ the columns of the adj_mat ]
- * @adj_mat [ a graph whose rules are based on a fsm (finite state machine) ] 
+ * @bool		[ halts numeric thread if start is an alphabet or alphabet thread if start is a numeric ]
+ * @i			[ number of words iterated ]
+ * @alpha	[ parses out words that start with an alphabet ]
+ * @numeric [ parses out numeric words that start with a numeric ]
  */
 string phrase;
-size_t state, edge;
-size_t adj_mat[3][3] = {{0, 2, 1}, {0, 1, 1}, {0, 2, 2}};
-
-/*
- * @fsm [ finite state machine ] 
- *     @instance [ null ]
- *	   @output   [ a list of strings that are identified either alpha or numeric ] 
- */
-void* fsm(void*);
-void printtoken(const string&, const bool&);
+bool flag;
+int i = 0;
+void* alpha(void*);
+void* numeric(void*);
 
 int main(int argc, char* argv[]) {
-	if (argc < 2) { // error checking for number of arguments
-		fprintf(stderr, "USAGE: %s <message>\n", argv[0]);
+	// error checking for number of arguments
+	if (argc < 2) {
+		fprintf(stderr, "USAGE: %s <message string>\n", argv[0]);
 		exit(-1);
 	}
 
  	// reading the phrase from terminal and storing in a global variable
 	phrase = argv[1];
+	// initialize flag with starting char
+	flag = isdigit(phrase[0]) ? true : false;
 
-	pthread_t alpha, numeric;
-    pthread_create(&alpha, NULL, fsm, NULL); // creating two threads (total 3 including parent thread)
-//    pthread_create(&numeric, NULL, fsm, NULL);
+	pthread_t t1, t2;
+   pthread_create(&t1, NULL, alpha, NULL); // creating two concurrent threads (total 3 including parent thread)
+	pthread_create(&t2, NULL, numeric, NULL);
 
-	pthread_join(alpha, NULL);
-//	pthread_join(numeric, NULL);
+	pthread_join(t1, NULL);
+	pthread_join(t2, NULL);
 
 	return 0;
 }
 
-/*
- * @fsm [ finite state machine ] 
- *     @instance [ null ]
- */
+void* alpha(void* arg) {
+	string word;
+	stringstream read(phrase);
+	int n = 0;
 
-void* fsm(void* arg) {
-	string token;
-	bool type;
-	state = 0;
-
-	for (char word : phrase) {
-		if (isspace(word) && edge != 0) { // reset if space and prev was not space
-			printtoken(token, type);
-			edge = 0;
-			token = "";
+	while (read >> word) {
+		if (isalpha(word[0]) || ispunct(word[0])) { // alphabets | symbols | punctuations 
+			cout << "alpha: " << word << endl;
+			n++;
+			i++;
+		}
+		else if (n < i && !flag) {
+			n++;
 		}
 		else {
-			if (isdigit(word)) { // numeric
-				edge = 1;
-				if (token.length() < 1) { type = 0; }
-			}
-			else if (isalpha(word) || ispunct(word)) { // alphabets | symbols | punctuations
-				edge = 2;
-				if (token.length() < 1) { type = 1; }
-			}
-
-			token += word;
+			flag = true;
+			while (flag) continue; // if digit, then wait
+			n++;
 		}
-
-		state = adj_mat[state][edge];
 	}
+
+	flag = true; // frees numeric thread
 	pthread_exit(0);
 }
 
-void printtoken(const string& token, const bool& type) {
-	cout << (type == 0 ? "numeric: " + token : "alpha: " + token) << endl;
+void* numeric(void* arg) {
+	string word;
+	stringstream read(phrase);
+	int n = 0;
+
+	while (read >> word) {
+		if (isdigit(word[0])) {
+			cout << "numeric: " << word << endl;
+			n++;
+			i++;
+		}
+		else if (n < i && flag) {
+			n++;
+		}
+		else {
+			flag = false;
+			while (!flag) continue; // if alphabet, then wait
+			n++;
+		}
+	}
+
+	flag = false; // frees alpha thread
+	pthread_exit(0);
 }
