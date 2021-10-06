@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 	flag = isdigit(phrase[0]) ? true : false;
 
 	pthread_t t1, t2;
-   pthread_create(&t1, NULL, alpha, NULL); // creating two concurrent threads (total 3 including parent thread)
+  	pthread_create(&t1, NULL, alpha, NULL); // creating two concurrent threads (total 3 including parent thread)
 	pthread_create(&t2, NULL, numeric, NULL);
 
 	pthread_join(t1, NULL);
