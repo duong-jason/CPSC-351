@@ -13,9 +13,9 @@ using namespace std;
 
 /*
  * @phrase  [ contains the command line input shared by both threads ]
- * @bool		[ halts numeric thread if start is an alphabet or alphabet thread if start is a numeric ]
- * @i			[ number of words iterated ]
- * @alpha	[ parses out words that start with an alphabet ]
+ * @bool    [ halts numeric thread if start is an alphabet or alphabet thread if start is a numeric ]
+ * @i       [ number of words iterated ]
+ * @alpha   [ parses out words that start with an alphabet ]
  * @numeric [ parses out numeric words that start with a numeric ]
  */
 string phrase;
