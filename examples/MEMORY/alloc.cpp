@@ -12,7 +12,7 @@ void ff(vector<int> ohole) {
 	for (int i = 0; i < mem_req.size(); ++i) {
 		bool bit = false;
 		for (int j = 0; j < h.size(); ++j) {
-			if (ohole[j] > mem_req[i]) {
+			if (ohole[j] >= mem_req[i]) {
 				result[0][i] = h[j];
 				ohole[j] -= mem_req[i];
 				bit = true;
@@ -30,7 +30,7 @@ item findmin(stack<item>& save) {
 	save.pop();
 
 	while (!save.empty()) {
-		if (save.top().hole <= min.hole) min = {save.top().hole, save.top().pos};
+		if (save.top().hole < min.hole) min = {save.top().hole, save.top().pos};
 		save.pop();
 	}
 
@@ -41,7 +41,7 @@ void bf(vector<int> ohole) {
 	stack<item> save;
 	for (int i = 0; i < mem_req.size(); ++i) {
 		for (int j = 0; j < h.size(); ++j) {
-			if (ohole[j] > mem_req[i]) save.push({h[j], j});
+			if (ohole[j] >= mem_req[i]) save.push({h[j], j});
 		}
 
 		if (save.empty()) result[1][i] = -1;
@@ -58,7 +58,7 @@ item findmax(stack<item>& save) {
 	save.pop();
 
 	while (!save.empty()) {
-		if (save.top().hole >= max.hole) max = {save.top().hole, save.top().pos};
+		if (save.top().hole > max.hole) max = {save.top().hole, save.top().pos};
 		save.pop();
 	}
 
@@ -69,7 +69,7 @@ void wf(vector<int> ohole) {
 	stack<item> save;
 	for (int i = 0; i < mem_req.size(); ++i) {
 		for (int j = 0; j < h.size(); ++j) {
-			if (ohole[j] > mem_req[i]) save.push({h[j], j});
+			if (ohole[j] >= mem_req[i]) save.push({h[j], j});
 		}
 
 		if (save.empty()) result[2][i] = -1;
