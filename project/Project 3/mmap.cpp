@@ -18,23 +18,22 @@ int main(int argc, char** argv) {
 	struct stat stats;
 	if (stat(argv[1], &stats) != 0) error("unable to get file properties\n");
 
-	/* declare file_size and page_size */
+	/* declarations */
 	int file_size = stats.st_size;
 	int page_size = getpagesize();
+	int in_fd, out_fd, init;
 
 	/* open input file */
-	int in_fd = open(argv[1], O_RDWR);
-	if (in_fd < 0) error("input file cannot be open");
+	if ((in_fd = open(argv[1], O_RDWR)) < 0) error("input file cannot be open");
 
 	/* creates an output file */
-	int out_fd = creat(argv[2], 0700);
-	if (out_fd < 0) error("output file cannot be created");
+	if ((out_fd = creat(argv[2], 0700)) < 0) error("cannot create output file");
+	if ((out_fd = open(argv[2], O_RDWR | O_CREAT | O_TRUNC, 0700)) < 0) error("output file cannot be created");
 
 	// initializes the output file with file_size
-	int init = ftruncate(out_fd, file_size);
-	if (init < 0) error("truncate failed"); 
+	if ((init = ftruncate(out_fd, file_size)) < 0) error("truncate failed");
 
-	for (int curr_size = 0; curr_size <= file_size; curr_size += page_size) { 
+	for (int offset = 0; offset <= file_size; offset += page_size) {
 		/* addr = default to OS decision
 		 * page_size = how many bytes to read from file
 		 * PROT_READ = set access rights to readable map region
@@ -42,8 +41,8 @@ int main(int argc, char** argv) {
 		 * MAP_SHARED = enables multiple processes to map to the same file in RAM
 		 * __offset = skips X number of pages
 		 */
-		char* in_data = (char*) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, in_fd, curr_size);
-		char* out_data = (char*) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, out_fd, curr_size);
+		char* in_data = (char*) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, in_fd, offset);
+		char* out_data = (char*) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, out_fd, offset);
 		if (!in_data || !out_data) error("mapping did not succeed\n");
 
 		/* file gets modified -> dirty_bit is set -> updates copy file on disk */
