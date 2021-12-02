@@ -1,3 +1,8 @@
+/*
+ * Project 3 - mmap.cpp
+ * Authors: Jason Duong (reddkingdom@csu.fullerton.edu)
+ *	    Dennis Tye (dennis.tye@csu.fullerton.edu)
+*/
 #include <iostream>
 #include <sys/mman.h>
 #include <fcntl.h>
