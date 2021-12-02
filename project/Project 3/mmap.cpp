@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
 	// initializes the output file with file_size
 	int init = ftruncate(out_fd, file_size);
-	if (init < 0) error("truncate failed");
+	if (init < 0) error("truncate failed"); 
 
 	for (int curr_size = 0; curr_size <= file_size; curr_size += page_size) { 
 		/* addr = default to OS decision
