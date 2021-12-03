@@ -26,8 +26,7 @@ int main(int argc, char** argv) {
 	if (stat(argv[1], &stats) != 0) error("unable to get file properties\n");
 
 	/* declarations */
-	const int file_size = stats.st_size;
-	const int page_size = getpagesize();
+	const int file_size = stats.st_size, page_size = getpagesize();
 	int in_fd, out_fd, init;
 
 	/* open input file */
@@ -41,23 +40,23 @@ int main(int argc, char** argv) {
 	if ((init = ftruncate(out_fd, file_size)) < 0) error("truncate failed");
 
 	for (int offset = 0; offset <= file_size; offset += page_size) {
-		/* addr = default to OS decision
+		/* addr = default to OS decision of mapping to virtual memory address space
 		 * page_size = how many bytes to read from file
 		 * PROT_READ = set access rights to readable map region
 		 * PROT_WRITE = set access rights to writable map region
 		 * MAP_SHARED = enables multiple processes to map to the same file in RAM
 		 * __offset = skips X number of pages
 		 */
-		char* in_data = (char*) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, in_fd, offset);
-		char* out_data = (char*) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, out_fd, offset);
-		if (!in_data || !out_data) error("mapping did not succeed");
+		char* in_addr = (char*) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, in_fd, offset);
+		char* out_addr = (char*) mmap(in_addr, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, out_fd, offset); // map to same memory region 
+		if (!in_addr || !out_addr) error("mapping did not succeed");
 
 		/* file gets modified -> dirty_bit is set -> updates copy file on disk */
-		memcpy(out_data, in_data, page_size);
+		memcpy(out_addr, in_addr, page_size);
 
 		/* unmap the shared memory region */
-		munmap(in_data, page_size);
-		munmap(out_data, page_size);
+		munmap(in_addr, page_size);
+		munmap(out_addr, page_size);
 	}
 
 	/* closes the file descriptors */
