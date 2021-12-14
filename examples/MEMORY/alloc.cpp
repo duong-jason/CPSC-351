@@ -16,15 +16,15 @@ void ff(vector<int> ohole) {
 	for (int i = 0; i < mem_req.size(); ++i) {
 		bool bit = false;
 		for (int j = 0; j < h.size(); ++j) {
-			if (ohole[j] >= mem_req[i]) {
-				result[0][i] = h[j];
-				calc[0][i] = to_string(ohole[j]) + "-";
-				calc[0][i] += to_string(mem_req[i]);
-				calc[0][i] += "=";
+			if (ohole[j] > mem_req[i]) {
+				result[1][i] = h[j];
+				calc[1][i] = to_string(ohole[j]) + "-";
+				calc[1][i] += to_string(mem_req[i]);
+				calc[1][i] += "=";
 
 				ohole[j] -= mem_req[i];
 
-				calc[0][i] += to_string(ohole[j]);
+				calc[1][i] += to_string(h[j]);
 
 				bit = true;
 				break;
@@ -50,21 +50,21 @@ void bf(vector<int> ohole) {
 	stack<item> save;
 	for (int i = 0; i < mem_req.size(); ++i) {
 		for (int j = 0; j < h.size(); ++j) {
-			if (ohole[j] >= mem_req[i]) save.push({ohole[j], j});
+			if (ohole[j] > mem_req[i]) save.push({h[j], j});
 		}
 
-		if (save.empty()) result[1][i] = -1;
+		if (save.empty()) result[2][i] = -1;
 		else {
 			item min = findmin(save);
-			result[1][i] = h[min.pos];
+			result[2][i] = h[min.pos];
 
-			calc[1][i] = to_string(ohole[min.pos]) + "-";
-			calc[1][i] += to_string(mem_req[i]);
-			calc[1][i] += "=";
+			calc[2][i] = to_string(ohole[min.pos]) + "-";
+			calc[2][i] += to_string(mem_req[i]);
+			calc[2][i] += "=";
 
 			ohole[min.pos] -= mem_req[i];
 
-			calc[1][i] += to_string(ohole[min.pos]);
+			calc[2][i] += to_string(h[min.pos]);
 		}
 	}
 }
@@ -85,21 +85,21 @@ void wf(vector<int> ohole) {
 	stack<item> save;
 	for (int i = 0; i < mem_req.size(); ++i) {
 		for (int j = 0; j < h.size(); ++j) {
-			if (ohole[j] >= mem_req[i]) save.push({ohole[j], j});
+			if (ohole[j] > mem_req[i]) save.push({h[j], j});
 		}
 
-		if (save.empty()) result[2][i] = -1;
+		if (save.empty()) result[0][i] = -1;
 		else {
 			item max = findmax(save);
-			result[2][i] = h[max.pos];
+			result[0][i] = h[max.pos];
 
-			calc[2][i] = to_string(ohole[max.pos]) + "-";
-			calc[2][i] += to_string(mem_req[i]);
-			calc[2][i] += "=";
+			calc[0][i] = to_string(ohole[max.pos]) + "-";
+			calc[0][i] += to_string(mem_req[i]);
+			calc[0][i] += "=";
 
 			ohole[max.pos] -= mem_req[i];
 
-			calc[2][i] += to_string(ohole[max.pos]);
+			calc[0][i] += to_string(ohole[max.pos]);
 		}
 	}
 }
@@ -108,10 +108,10 @@ int main() {
 	size_t x, y, xsize, ysize;
 	cout << "Enter Memory Requirements Size: "; cin >> xsize;
 	cout << "Enter Memory Requirements: ";
-	while (mem_req.size() < xsize && cin >> x) mem_req.push_back(x);
+	while (mem_req.size() && cin >> x) mem_req.push_back(x);
 	cout << "Enter Memory Hole Size: "; cin >> ysize;
 	cout << "Enter Memory Holes: ";
-	while (hole.size() < ysize && cin >> y) { h.push_back(y); hole.push_back(y); }
+	while (hole.size() && cin >> y) { h.push_back(y); hole.push_back(y); }
 
 	for (int i = 0; i < xsize-1; ++i) {
 		calc.push_back({""});
