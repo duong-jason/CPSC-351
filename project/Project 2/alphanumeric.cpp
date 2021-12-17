@@ -14,7 +14,7 @@ using namespace std;
 /*
  * @phrase  [ contains the command line input shared by both threads ]
  * @bit     [ halts numeric thread if it starts with an alphabet or an alphabet thread starts with a numeric ]
-            [ additionally determines if next word needs to be read of not ]
+ *          [ additionally determines if next word needs to be read of not ]
  * @read	[ parses the phrase into tokens (words) ]
  * @word	[ the string to be printed to the console ]
  * @alpha   [ parses out words that start with an alphabet ]
@@ -83,7 +83,7 @@ void* numeric(void* arg) {
             bit[1] = true; // enables the next word to be read
         }
         else {
-             // block t2 thread until t1 thread encounters an word starting with a digit/numeric
+            // block t2 thread until t1 thread encounters an word starting with a digit/numeric
             bit[0] = false;
             // after this thread wakes, it should not read the next word as the other thread already read it 
             bit[1] = false;
