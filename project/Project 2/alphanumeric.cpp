@@ -29,17 +29,29 @@ string word;
 void* alpha(void*);
 void* numeric(void*);
 
+void alphalock() {
+    if (!isalpha(word[0])) {
+        bit[0] = bit[1] = true;
+        while (bit[0]) continue; // if digit, then wait
+    }
+}
+
+void numlock() {
+    if (!isdigit(word[0])) {
+        bit[0] = bit[1] =  false;
+        while (!bit[0]) continue; // if alpha, then wait
+    }
+}
+
 int main(int argc, char* argv[]) {
-    // error checking for number of arguments
-    if (argc < 2) {
+    if (argc != 2) { // error checking for number of arguments
         fprintf(stderr, "USAGE: %s <message string>\n", argv[0]);
         exit(-1);
     }
 
-     // reading the phrase from terminal and storing in a global variable, phrase
-    phrase = argv[1];
-    // initialize parser to read first word in phrase
-    read << phrase;
+    // reading the phrase from terminal and storing in a global variable, phrase
+    read << argv[1];
+    // initilize parser to read the first word in the phrase
     read >> word;
 
     // creating two concurrent threads (total 3 including parent thread)
@@ -55,22 +67,9 @@ int main(int argc, char* argv[]) {
 
 void* alpha(void* arg) {
     do {
-        if (isalpha(word[0]) || ispunct(word[0])) { // alphabets | symbols | punctuations 
-            cout << "alpha: " << word << endl;
-            bit[1] = true; // enables the next word to be read
-        }
-        else {
-            // block t1 thread until t2 thread encounters an word starting with an alphabet
-            bit[0] = true;
-            // after this thread wakes, it should not read the next word as the other thread already read it 
-            bit[1] = false;
-            if (!read) break; // if numeric thread finishes reading the phrase, then simply stop
-            while (bit[0]) continue; // if digit, then wait
-        }
-        if (bit[1]) { // only read next word if last word was an alphabet
-            read >> word;	
-        }
-    } while(read);
+        alphalock(); // only allow alpha-words to pass
+        if (!bit[1] && read) cout << "alpha: " << word << endl;
+    } while (read >> word);
 
     bit[0] = true; // frees numeric thread
     pthread_exit(0);
@@ -78,23 +77,10 @@ void* alpha(void* arg) {
 
 void* numeric(void* arg) {
     do {
-        if (isdigit(word[0])) {
-            cout << "numeric: " << word << endl;
-            bit[1] = true; // enables the next word to be read
-        }
-        else {
-            // block t2 thread until t1 thread encounters an word starting with a digit/numeric
-            bit[0] = false;
-            // after this thread wakes, it should not read the next word as the other thread already read it 
-            bit[1] = false;
-            if (!read) break; // if alpha thread finishes reading the phrase, then simply stop
-            while (!bit[0]) continue; // if alphabet, then wait
-        }
-        if (bit[1]) { // only read next word if last word was a numeric
-            read >> word;
-        }
-    } while(read);
-
+        numlock(); // only allow numeric-words to pass
+        if (bit[1] && read) cout << "numeric: " << word << endl;
+    } while (read >> word);
+    
     bit[0] = false; // frees alpha thread
     pthread_exit(0);
 }
