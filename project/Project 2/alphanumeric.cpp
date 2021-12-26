@@ -12,15 +12,13 @@
 using namespace std;
 
 /*
- * @phrase  [ contains the command line input shared by both threads ]
  * @bit     [ halts numeric thread if it starts with an alphabet or an alphabet thread starts with a numeric ]
  *          [ additionally determines if next word needs to be read of not ]
- * @read	[ parses the phrase into tokens (words) ]
- * @word	[ the string to be printed to the console ]
+ * @read    [ parses the phrase into tokens (words) ]
+ * @word    [ the string to be printed to the console ]
  * @alpha   [ parses out words that start with an alphabet ]
  * @numeric [ parses out numeric words that start with a numeric ]
  */
-string phrase;
 bool bit[2] = {0, 0};
 
 stringstream read;
@@ -38,7 +36,7 @@ void alphalock() {
 
 void numlock() {
     if (!isdigit(word[0])) {
-        bit[0] = bit[1] =  false;
+        bit[0] = bit[1] = false;
         while (!bit[0]) continue; // if alpha, then wait
     }
 }
@@ -61,8 +59,6 @@ int main(int argc, char* argv[]) {
 
     pthread_join(t1, NULL);
     pthread_join(t2, NULL);
-
-    return 0;
 }
 
 void* alpha(void* arg) {
