@@ -30,14 +30,26 @@ void* numeric(void*);
 void alphalock() {
     if (!isalpha(word[0])) {
         bit[0] = bit[1] = true;
-        while (bit[0]) continue; // if digit, then wait
+        while (bit[0]) {
+            /*
+             * let numeric-thread continue processing
+             * while alpha-thread waits for interrupt
+             */
+            continue;
+        }
     }
 }
 
 void numlock() {
     if (!isdigit(word[0])) {
         bit[0] = bit[1] = false;
-        while (!bit[0]) continue; // if alpha, then wait
+        while (!bit[0]) {
+            /*
+             * let alpha-thread continue processing
+             * while numeric-thread waits for interrupt
+             */
+            continue;
+        }
     }
 }
 
