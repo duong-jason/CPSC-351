@@ -10,7 +10,7 @@ vector<int> h, hole;
 vector<vector<int>> result;
 vector<vector<string>> calc;
 
-struct item { int hole; int pos; };
+struct item { int hole, pos; };
 
 void ff(vector<int> ohole) {
 	for (int i = 0; i < mem_req.size(); ++i) {
@@ -113,24 +113,16 @@ int main() {
 	cout << "Enter Memory Holes: ";
 	while (hole.size() < ysize && cin >> y) { h.push_back(y); hole.push_back(y); }
 
-	for (int i = 0; i < xsize-1; ++i) {
-		calc.push_back({""});
-		for (int j = 0; j < 3; ++j) {
-			calc[i].push_back("");	
-		}
-	}
+    calc.resize(3, vector<string>(xsize));
+    result.resize(3, vector<int>(xsize));
 
 	cout << "\n\n";
-	for (int i = 0; i < 3; ++i) {
-		result.push_back({});
-		for (int j = 0; j < xsize; ++j) result[i].push_back(0);
-	}
 
 	ff(hole); bf(hole); wf(hole);
 
 	int z = 1;
 	cout << "Memory Holes: "; for (size_t h : hole) { cout << h << " ";  } cout << endl;
-	string t; cout << "Process "; for (size_t v : mem_req) { cout << v << " "; t += to_string(v); } cout << endl;
+	string t; cout << "Process: "; for (size_t v : mem_req) { cout << v << " "; t += to_string(v); } cout << endl;
 	for (int i = 0; i < t.length()+11; ++i) { cout << "-"; } cout << endl;
 
 	for (vector<int> l : result) {
@@ -148,8 +140,7 @@ int main() {
 		cout << endl;
 	}
 
-	cout << endl << endl;
-	cout << "Calculations: \n--------------------------\n";
+	cout << "\n\nCalculations: \n--------------------------\n";
 	for (vector<string> c : calc) {
 		for (string s : c) {
 			cout << s << setw(12-s.length()) << "|";
