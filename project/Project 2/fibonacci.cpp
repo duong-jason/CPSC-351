@@ -12,7 +12,7 @@
 
 using namespace std;
 
-vector<size_t> f;       // global data structure
+vector<size_t> f = { 0 }; // global data structure
 void* fibonacci(void*); // thread caller function
 
 int main(int argc, char* argv[]) {
@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 		exit(-1);
 	}
 
-   if (atoi(argv[1]) < 0) { // error checking if instance is a negative integer
+   if (atoi(argv[1]) < 1) { // error checking if instance is a negative integer
     	fprintf(stderr, "instance must be >= 0 (nonnegative integer)\n");
     	return -1;
    }
@@ -32,20 +32,15 @@ int main(int argc, char* argv[]) {
 
 	// parent thread outputs the sequence stored in the vector
 	for (size_t elt : f) { cout << elt << " "; }
-	cout << endl;
-
+	
 	return 0;
 }
 
 void* fibonacci(void* arg) {
-	size_t n = atoi((char*)arg);
+	int n = atoi((char*)arg);
 
-	// base cases | initial values
-	f.push_back(0);
-	f.push_back(1);
-
-	// for each iteration, we insert a new element based on the Fibonacci principle
-	for (size_t i = 0; i < n-2; ++i) {
+    if (n > 1) f.push_back(1);
+	for (int i = 0; i < n-2; ++i) { // for each iteration, we insert a new element based on the Fibonacci principle
 		f.push_back(f[i] + f[i+1]);
 	}
 
