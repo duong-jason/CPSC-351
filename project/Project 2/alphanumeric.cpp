@@ -11,42 +11,24 @@
 using namespace std;
 
 /*
- * @flag    [ halts numeric thread if it starts with an alphabet or an alphabet thread starts with a numeric ]
+ * @state   [ halts numeric thread if it starts with an alphabet or an alphabet thread starts with a numeric ]
  * @token   [ the current string to be printed to the console ]
  * @alpha   [ parses out words that start with an alphabet ]
  * @numeric [ parses out numeric words that start with a numeric ]
  */
-bool flag = 0;
+enum State { A, N } state;
 char* token;
 
+#define wait(S)                  \
+	state = S;                   \
+	while (state == S) continue; \
+	if (!token) break;
+
+#define signal(S) \
+	printf("%s %s\n", (S == A ? "alpha:" : "numeric:"), token);
+	
 void* alpha(void*);
 void* numeric(void*);
-
-void alphalock() {
-    if (!isalpha(token[0])) {
-        flag = true;
-        while (flag) {
-            /*
-             * let numeric-thread continue processing
-             * while alpha-thread waits for interrupt
-             */
-            continue;
-        }
-    }
-}
-
-void numlock() {
-    if (!isdigit(token[0])) {
-        flag = false;
-        while (!flag) {
-            /*
-             * let alpha-thread continue processing
-             * while numeric-thread waits for interrupt
-             */
-            continue;
-        }
-    }
-}
 
 int main(int argc, char* argv[]) {
     if (argc != 2) { // error checking for number of arguments
@@ -54,11 +36,9 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    // initilize parser to read the first word in the phrase
-    token = strtok(argv[1], " ");
+    token = strtok(argv[1], " "); // initilize parser to read the first word in the phrase
+    pthread_t t1, t2; // creating two concurrent threads (total 3 including parent thread)
 
-    // creating two concurrent threads (total 3 including parent thread)
-    pthread_t t1, t2;
     pthread_create(&t1, NULL, alpha, NULL);
     pthread_create(&t2, NULL, numeric, NULL);
 
@@ -67,25 +47,21 @@ int main(int argc, char* argv[]) {
 }
 
 void* alpha(void* arg) {
-    while (1) {
-        alphalock(); // only allow alpha-words to pass
-        if (!token) break;
-        printf("alpha: %s\n", token);
-        token = strtok(NULL, " ");
-    }
+	do {
+        if (isdigit(token[0])) { wait(N); } // only allow alpha-words to pass
+		signal(A);
+    } while (token = strtok(NULL, " "));
 
-    flag = true; // frees numeric thread
+    state = N; // frees numeric thread
     pthread_exit(0);
 }
 
 void* numeric(void* arg) {
-    while (1) {
-        numlock(); // only allow numeric-words to pass
-        if (!token) break;
-        printf("numeric: %s\n", token);
-        token = strtok(NULL, " ");
-    }
+	do {
+		if (!isdigit(token[0])) { wait(A); } // only allow numeric-words to pass
+		signal(N);
+    } while (token = strtok(NULL, " "));
     
-    flag = false; // frees alpha thread
+    state = A; // frees alpha thread
     pthread_exit(0);
 }
