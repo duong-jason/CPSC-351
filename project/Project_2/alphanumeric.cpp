@@ -4,14 +4,14 @@
  */
 
 #include <pthread.h>
-#include <string.h> // strtok
+#include <string.h> // strtok()
 #include <stdio.h>
-#include <cctype> // isalpha | isdigit
+#include <cctype> // isalpha(), isdigit()
 
 /*
  * @state   [ current state based on the current token read ]
  * @token   [ the current string to be printed to the console ]
- * wait     [ locks a thread based on the current token read ]
+ * @wait     [ locks a thread based on the current token read ]
  * @alpha   [ parses out words that start with an alphabet ]
  * @numeric [ parses out numeric words that start with a numeric ]
  */
